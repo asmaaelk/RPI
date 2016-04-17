@@ -50,24 +50,33 @@ def toggle_yellow():
         GPIO.output(15, GPIO.HIGH)
     yellow_active = not yellow_active
 
+def pinSetUP(index, brightness):
+    p = GPIO.PWM(index, 50)
+    p.start(0)
+    p.ChangeDutyCycle(brightness)
+    time.sleep(2)
+
 @app.route('/', methods=['GET', 'POST'])
 def hello_world():
+    print str(request)
+    #select = request.form.get('Index')
     if request.method == 'POST':
-        if request.form['submit'] == 'Turn On':
-            turn_all_on()
-            return( redirect ('/') )
-        elif request.form['submit'] == 'Turn Off':
-            turn_all_off()
-            return( redirect ('/') )
-        elif request.form['submit'] == 'Toggle Red':
-            toggle_red()
-            return( redirect ('/') )
-        elif request.form['submit'] == 'Toggle Green':
-            toggle_green()
-            return( redirect ('/') )
-        elif request.form['submit'] == 'Toggle Yellow':
-            toggle_yellow()
-            return( redirect ('/') )
+        turn_all_off()
+        #print str(select)
+        selected_index = request.form.get('Index')
+        selected_brightness = request.form.get("Brightness")
+        
+        print str(selected_index)
+        print str(selected_brightness)
+
+        if selected_index:
+            pinSetUP(int(selected_index), int(selected_brightness))
+            
+            
+            
+#        if selected_index == "15":
+#            toggle_yellow()
+#            return redirect('/')
         else:
             return( redirect ('/') )
     elif request.method == 'GET':
