@@ -1,89 +1,74 @@
 from flask import Flask, render_template, request, redirect
-import RPi.GPIO as GPIO
-import time
+import thread, time
+#import RPi.GPIO as GPIO
 
-red_active, green_active, yellow_active, all_active = False, False, False, False
+# GPIO.setmode(GPIO.BOARD)
+# GPIO.setwarnings(False)
 
+## Raspberry 2 GPIO pin numbers. 
+pin_numbers = [3, 5, 7, 8, 10, 11, 13, 15, 16, 18, 19, 21, 22, 23, 24, 26]
+
+## PWM frequncy
+frequency = 50
+
+## Bool to control when LEDs are active
+LED_active = false
+
+## Setup pwm data structure. Keys are pins. Values
+##  are tuple of (duty cycle value, pwm reference)  
+def pwm_setup():
+    pins = {}
+    for pin_num in pin_numbers:
+        pins[pin_num] = [0]
+        pins[pin_num] = [0, GPIO.PWM(pin_num, frequency)]
+        pins[pin_num][1].start(0)
+    return(pins)
+    
+## Cleanups pwm data structure.
+def pwm_cleanup(pins):
+    for pin_num in pin_numbers:
+        pin_num[1].stop()
+    GPIO.cleanup()
+
+## Define pwm update loop which will run other thread
+def pwm_loop():
+    global pins
+    while True
+        for pin in pins:
+            print(pin, pins[pin])
+            # pin.ChangeDutyCycle(pins[pin])
+        time.sleep(0.1)
+
+## Updates pwm values for individual LEDs. Called when user hits submit.
+def update_pwm(index, brightness):
+    global pins
+    pins[index] = brightness
+
+## Start setup
+pins = pwm_setup()
+
+## Start pwm loop
+try:
+    thread.start_new_thread(pwm_loop, ())
+except:
+    print 'Couldn\'t create second thread'
+    exit()
+    
+## Start web server via Flask
 app = Flask(__name__)
 
-GPIO.setmode(GPIO.BOARD)
-GPIO.setwarnings(False)
-GPIO.setup(11, GPIO.OUT)
-GPIO.setup(13, GPIO.OUT)
-GPIO.setup(15, GPIO.OUT)
-
-def turn_all_on():
-    global red_active, green_active, yellow_active
-    GPIO.output(11, GPIO.HIGH)
-    GPIO.output(13, GPIO.HIGH)
-    GPIO.output(15, GPIO.HIGH)
-    red_active, green_active, yellow_active = True, True, True
- 
-def turn_all_off():
-    global red_active, green_active, yellow_active
-    GPIO.output(11, GPIO.LOW)
-    GPIO.output(13, GPIO.LOW)
-    GPIO.output(15, GPIO.LOW)
-    red_active, green_active, yellow_active = False, False, False
-
-def toggle_red():
-    global red_active
-    if red_active:
-        GPIO.output(11, GPIO.LOW)
-    else:
-        GPIO.output(11, GPIO.HIGH)
-    red_active = not red_active
-
-def toggle_green():
-    global green_active
-    if green_active:
-        GPIO.output(13, GPIO.LOW)
-    else:
-        GPIO.output(13, GPIO.HIGH)
-    green_active = not green_active
-
-def toggle_yellow():
-    global yellow_active
-    if yellow_active:
-        GPIO.output(15, GPIO.LOW)
-    else:
-        GPIO.output(15, GPIO.HIGH)
-    yellow_active = not yellow_active
-
-def pinSetUP(index, brightness):
-    p = GPIO.PWM(index, 50)
-    p.start(0)
-    p.ChangeDutyCycle(brightness)
-    time.sleep(2)
 
 @app.route('/', methods=['GET', 'POST'])
-def hello_world():
-    print str(request)
-    #select = request.form.get('Index')
+def update_pwm():
     if request.method == 'POST':
-        turn_all_off()
-        #print str(select)
-        selected_index = request.form.get('Index')
-        selected_brightness = request.form.get("Brightness")
+        index = int(request.form.get('Index'))
+        brightness = int(request.form.get('Brightness'))
         
-        print str(selected_index)
-        print str(selected_brightness)
-
-        if selected_index:
-            pinSetUP(int(selected_index), int(selected_brightness))
-            
-            
-            
-#        if selected_index == "15":
-#            toggle_yellow()
-#            return redirect('/')
-        else:
-            return( redirect ('/') )
+        update_pwm(index, brightness)
+        
+        return( redirect ('/') )
     elif request.method == 'GET':
         return render_template('index.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-
-
