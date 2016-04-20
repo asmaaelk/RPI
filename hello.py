@@ -11,9 +11,6 @@ pin_numbers = [3, 5, 7, 8, 10, 11, 13, 15, 16, 18, 19, 21, 22, 23, 24, 26]
 ## PWM frequncy
 frequency = 50
 
-## Bool to control when LEDs are active
-LED_active = False
-
 ## Setup pwm data structure. Keys are pins. Values
 ##  are tuple of (duty cycle value, pwm reference)  
 def pwm_setup():
@@ -24,12 +21,6 @@ def pwm_setup():
         pins[pin_num][1].start(0)
     return(pins)
     
-## Cleanups pwm data structure.
-def pwm_cleanup(pins):
-    for pin_num in pin_numbers:
-        pin_num[1].stop()
-    GPIO.cleanup()
-
 ## Define pwm update loop which will run other thread
 def pwm_loop():
     global pins
